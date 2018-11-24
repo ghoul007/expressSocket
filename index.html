@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    test SocketIO
+    <table class="table">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Comment</th>
+            </tr>
+        </thead>
+        <tbody id="rows">
+
+        </tbody>
+    </table>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io('http://localhost:3000')
+        socket.on('comment.add', function (message) {
+            console.log(message.length)
+            message.forEach(element => {
+                $('#rows').append(`<tr>
+                    <td>${element.user}</td> 
+                    <td>${element.comment}</td> 
+                    </tr>`)
+            });
+            // socket.emit('greeting-from-client', { greeting: 'hello Server' })
+        })
+    </script>
+
+</body>
+
+</html>
