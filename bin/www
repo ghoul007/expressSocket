@@ -1,5 +1,9 @@
 #!/usr/bin/env node
 
+var redisConfig = {
+  host: 'localhost',
+  port: 6379
+}
 /**
  * Module dependencies.
  */
@@ -7,9 +11,10 @@
 var app = require('../app');
 var debug = require('debug')('expresssocket:server');
 var http = require('http');
-
-
-
+// var sticky = require('sticky-session');
+var sticky = require('socketio-sticky-session');
+var cluster = require('cluster')
+var redis = require('socket.io-redis');
 
 /**
  * Get port from environment and store in Express.
@@ -22,24 +27,32 @@ app.set('port', port);
  * Create HTTP server.
  */
 
-var server = http.createServer(app);
+var server = sticky({ num: 2 }, function () {
+  let ser = http.createServer(app);
+  var io = app.io;
+  io.attach(ser)
+  io.adapter(redis(redisConfig))
+  return ser
+})
 
 /**
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
+server.listen(port, function () {
+  if (cluster.isMaster) {
+    console.log('Master server started on port '+ port);
+  } else {
+    console.log('- Child server started on port '+ port);
+  }
+});;
 server.on('error', onError);
 server.on('listening', onListening);
 
 
 
 
-/**
- * SocketIO
- */
-var io = app.io;
-io.attach(server)
+
 
 
 

@@ -1,8 +1,17 @@
+
+var redisConfig = {
+    host: 'localhost',
+    port: 6379
+}
 var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 var Comment = require('./models/comment');
+var cluster = require('cluster');
+var sticky = require('sticky-session');
+var redis = require('socket.io-redis');
+var emitter = require('socket.io-emitter')(redisConfig)
 
 
 // New comments
@@ -35,16 +44,25 @@ var socketIO = require('socket.io')
 io = socketIO();
 var app = express();
 app.io = io;
+
+
+
+
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, '/')));
 io.on('connection', function (socket) {
-    var stream  = Comment.find(
-        function(err, data){
+    var stream = Comment.find(
+        function (err, data) {
             socket.emit('comment.add', data)
         }
-    ) 
+    )
+
+    socket.on('message.sent', function (port) {
+        emitter.emit('message.received', port)
+    })
+
 })
 module.exports = app;
